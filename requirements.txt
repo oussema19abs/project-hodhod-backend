@@ -1,7 +1,7 @@
 fastapi
 uvicorn
 requests
-pydantic
+python-dotenv
 
 
 pandas      # If you process data
