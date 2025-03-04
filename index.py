@@ -44,7 +44,7 @@ def save_cache(news):
         json.dump({"timestamp": datetime.utcnow().isoformat(), "news": news}, file)
 
 # Fetch news from multiple sources
-def get_news(topic: str):
+def fetch_news(topic: str):
     news = []
     
     # Fetch from GNews
@@ -95,25 +95,14 @@ def get_news(topic: str):
     if cache:
         return {"news": cache}
     
-    response = requests.get(NEWS_API_URL + topic)
-    data = response.json()
+    articles = fetch_news(topic)
     
-    articles = []
-    for article in data.get("results", []):
-        pexels_images = get_pexels_images(topic)
-        lexica_images = get_lexica_images(topic)
-
-        articles.append({
-            "title": article["title"],
-            "summary": article.get("description", "No description available."),
-            "pexels_images": pexels_images,
-            "lexica_images": lexica_images,
-            "source": article["source_url"]
-        })
+    for article in articles:
+        lexica_images = get_lexica_images(article["title"])
+        article["lexica_images"] = lexica_images
 
     save_cache(articles)
     return {"news": articles}
-
 
 @app.get("/")
 def home():
