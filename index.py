@@ -27,7 +27,6 @@ EXPIRY_TIME = timedelta(hours=24)
 # APIs
 GNEWS_API = f"https://gnews.io/api/v4/search?token={os.getenv('GNEWS_API_KEY')}&q="
 NEWSDATA_API = f"https://newsdata.io/api/1/news?apikey={os.getenv('NEWSDATA_API_KEY')}&q="
-NEWSAPI_API = f"https://newsapi.org/v2/everything?apiKey={os.getenv('NEWSAPI_API_KEY')}&q="
 HACKER_NEWS_API = "https://hacker-news.firebaseio.com/v0/topstories.json"
 
 # Load cached news if it exists and is valid
@@ -67,16 +66,6 @@ def fetch_news(topic: str):
         ])
     except Exception as e:
         print(f"NewsData.io Error: {e}")
-
-    # Fetch from NewsAPI.org
-    try:
-        res = requests.get(NEWSAPI_API + topic).json()
-        news.extend([
-            {"title": a["title"], "summary": a["description"], "source": a["url"]}
-            for a in res.get("articles", [])
-        ])
-    except Exception as e:
-        print(f"NewsAPI.org Error: {e}")
 
     # Fetch from Hacker News
     try:
