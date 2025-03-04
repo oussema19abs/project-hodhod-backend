@@ -27,7 +27,7 @@ EXPIRY_TIME = timedelta(hours=24)
 GNEWS_API = f"https://gnews.io/api/v4/search?token={os.getenv('GNEWS_API_KEY')}&q="
 NEWSDATA_API = f"https://newsdata.io/api/1/news?apikey={os.getenv('NEWSDATA_API_KEY')}&q="
 HACKER_NEWS_API = "https://hacker-news.firebaseio.com/v0/topstories.json"
-LEXICA_API_URL = "https://lexica.art/api/v1/search"
+POLLINATIONS_API = "https://image.pollinations.ai/prompt/"
 
 # Load cached news if it exists and is valid
 def load_cache():
@@ -78,16 +78,15 @@ def fetch_news(topic: str):
 
     return news[:10]  # Limit to 10 articles
 
-# Generate AI images for articles
-def get_lexica_images(query, num_images=3):
-    params = {"q": query}
-    response = requests.get(LEXICA_API_URL, params=params)
-
-    if response.status_code == 200:
-        data = response.json()
-        return [photo["src"] for photo in data.get("images", [])[:num_images]]
-    
-    return []
+# Generate AI images for articles using Pollinations
+def generate_pollinations_image(prompt):
+    """Generate an AI image using Pollinations API."""
+    try:
+        image_url = POLLINATIONS_API + prompt.replace(" ", "%20")  # Format the URL
+        return image_url
+    except Exception as e:
+        print(f"Pollinations Error: {e}")
+        return None
 
 @app.get("/news/{topic}")
 def get_news(topic: str):
@@ -98,8 +97,8 @@ def get_news(topic: str):
     articles = fetch_news(topic)
     
     for article in articles:
-        lexica_images = get_lexica_images(article["title"])
-        article["lexica_images"] = lexica_images
+        ai_image = generate_pollinations_image(article["title"])  # Generate AI image
+        article["ai_generated_image"] = ai_image  # Attach image to article
 
     save_cache(articles)
     return {"news": articles}
