@@ -5,7 +5,6 @@ import json
 import os
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
-import openai  # For image generation
 
 load_dotenv()  # Load API keys from .env file
 
