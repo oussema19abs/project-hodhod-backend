@@ -28,6 +28,7 @@ EXPIRY_TIME = timedelta(hours=24)
 GNEWS_API = f"https://gnews.io/api/v4/search?token={os.getenv('GNEWS_API_KEY')}&q="
 NEWSDATA_API = f"https://newsdata.io/api/1/news?apikey={os.getenv('NEWSDATA_API_KEY')}&q="
 HACKER_NEWS_API = "https://hacker-news.firebaseio.com/v0/topstories.json"
+LEXICA_API_URL = "https://lexica.art/api/v1/search"
 
 # Load cached news if it exists and is valid
 def load_cache():
@@ -79,29 +80,41 @@ def fetch_news(topic: str):
     return news[:10]  # Limit to 10 articles
 
 # Generate AI images for articles
-def generate_images(prompt):
-    try:
-        openai.api_key = os.getenv("OPENAI_API_KEY")
-        response = openai.Image.create(prompt=prompt, n=3, size="512x512")
-        return [img["url"] for img in response["data"]]
-    except Exception as e:
-        print(f"OpenAI Image Error: {e}")
-        return []
+def get_lexica_images(query, num_images=3):
+    params = {"q": query}
+    response = requests.get(LEXICA_API_URL, params=params)
+
+    if response.status_code == 200:
+        data = response.json()
+        return [photo["src"] for photo in data.get("images", [])[:num_images]]
+    
+    return []
 
 @app.get("/news/{topic}")
 def get_news(topic: str):
     cache = load_cache()
     if cache:
         return {"news": cache}
+    
+    response = requests.get(NEWS_API_URL + topic)
+    data = response.json()
+    
+    articles = []
+    for article in data.get("results", []):
+        pexels_images = get_pexels_images(topic)
+        lexica_images = get_lexica_images(topic)
 
-    articles = fetch_news(topic)
-
-    # Generate images for each article
-    for article in articles:
-        article["images"] = generate_images(article["title"])
+        articles.append({
+            "title": article["title"],
+            "summary": article.get("description", "No description available."),
+            "pexels_images": pexels_images,
+            "lexica_images": lexica_images,
+            "source": article["source_url"]
+        })
 
     save_cache(articles)
     return {"news": articles}
+
 
 @app.get("/")
 def home():
