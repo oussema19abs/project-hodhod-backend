@@ -19,9 +19,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Store fetched news (expires after 24h)
+# Store fetched news (expires after 2 minutes)
 CACHE_FILE = "news_cache.json"
-EXPIRY_TIME = timedelta(hours=24)
+EXPIRY_TIME = timedelta(minutes=2)
 
 # APIs
 GNEWS_API = f"https://gnews.io/api/v4/search?token={os.getenv('GNEWS_API_KEY')}&q="
