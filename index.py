@@ -20,7 +20,6 @@ app.add_middleware(
 )
 
 # Store fetched news (expires after 2 minutes)
-CACHE_FILE = "news_cache.json"
 EXPIRY_TIME = timedelta(minutes=2)
 
 # APIs
@@ -29,18 +28,24 @@ NEWSDATA_API = f"https://newsdata.io/api/1/news?apikey={os.getenv('NEWSDATA_API_
 HACKER_NEWS_API = "https://hacker-news.firebaseio.com/v0/topstories.json"
 POLLINATIONS_API = "https://image.pollinations.ai/prompt/"
 
+# Get cache file path for a topic
+def get_cache_file(topic: str):
+    return f"news_cache_{topic.lower().replace(' ', '_')}.json"
+
 # Load cached news if it exists and is valid
-def load_cache():
-    if os.path.exists(CACHE_FILE):
-        with open(CACHE_FILE, "r") as file:
+def load_cache(topic: str):
+    cache_file = get_cache_file(topic)
+    if os.path.exists(cache_file):
+        with open(cache_file, "r") as file:
             data = json.load(file)
             if datetime.fromisoformat(data["timestamp"]) > datetime.utcnow() - EXPIRY_TIME:
                 return data["news"]
     return None
 
 # Save cache
-def save_cache(news):
-    with open(CACHE_FILE, "w") as file:
+def save_cache(topic: str, news):
+    cache_file = get_cache_file(topic)
+    with open(cache_file, "w") as file:
         json.dump({"timestamp": datetime.utcnow().isoformat(), "news": news}, file)
 
 # Fetch news from multiple sources
@@ -90,7 +95,7 @@ def generate_pollinations_image(prompt):
 
 @app.get("/news/{topic}")
 def get_news(topic: str):
-    cache = load_cache()
+    cache = load_cache(topic)
     if cache:
         return {"news": cache}
     
@@ -100,7 +105,7 @@ def get_news(topic: str):
         ai_image = generate_pollinations_image(article["title"])  # Generate AI image
         article["ai_generated_image"] = ai_image  # Attach image to article
 
-    save_cache(articles)
+    save_cache(topic, articles)
     return {"news": articles}
 
 @app.get("/")
