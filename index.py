@@ -45,7 +45,7 @@ def save_cache(news):
         json.dump({"timestamp": datetime.utcnow().isoformat(), "news": news}, file)
 
 # Fetch news from multiple sources
-def fetch_news(topic: str):
+def get_news(topic: str):
     news = []
     
     # Fetch from GNews
