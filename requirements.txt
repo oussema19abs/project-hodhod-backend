@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+requests
+pydantic
+
+
+pandas      # If you process data
+numpy       # If you need numerical operations
+httpx       # If making async HTTP requests
+motor       # If using MongoDB
+sqlalchemy  # If using SQL databases
